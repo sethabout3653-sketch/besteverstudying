@@ -12,11 +12,7 @@ export type ProxyTransport = "epoxy" | "libcurl";
 /** Alternates to fall back on when one relay refuses a site */
 export const WISP_SERVERS = [
   { name: "Mercury", url: "wss://wisp.mercurywork.shop/" },
-  { name: "TitaniumNetwork", url: "wss://wisp.terbiumon.top/wisp/" },
   { name: "Nebula", url: "wss://anura.pro/" },
-  { name: "Ruby", url: "wss://ruby.rubynetwork.co/wisp/" },
-  { name: "Rhodium", url: "wss://wisp.rhw.one/" },
-  { name: "Shadow", url: "wss://shadow.freewisp.org/wisp/" },
 ] as const;
 
 /** Automatically selects the best Wisp relay based on the target URL */
@@ -47,7 +43,7 @@ export function getAutoWispForUrl(targetUrl?: string): string {
       host.includes("yahoo") ||
       host.includes("wikipedia")
     ) {
-      return "wss://wisp.terbiumon.top/wisp/";
+      return "wss://anura.pro/";
     }
     // Gaming & interactive WASM portals
     if (
@@ -77,38 +73,9 @@ export function getAutoWispForUrl(targetUrl?: string): string {
 /**
  * Automatically determines optimal transport (Libcurl vs Epoxy) for the URL
  */
-export function getAutoTransportForUrl(targetUrl?: string): ProxyTransport {
-  if (!targetUrl) return "epoxy";
-  try {
-    const raw = targetUrl.startsWith("http") ? targetUrl : `https://${targetUrl}`;
-    const url = new URL(raw);
-    const host = url.hostname.toLowerCase();
-
-    // YouTube, Twitch, Spotify, SoundCloud, Vimeo and direct video/audio assets require massive bandwidth and streaming stability.
-    // Epoxy's Rust-in-WASM TLS stack panics on large streaming buffers, leading to Chromium's STATUS_BREAKPOINT tab crash.
-    // Libcurl offloads TLS to the Wisp relay, preventing browser heap exhaustion.
-    if (
-      host.includes("googlevideo") ||
-      host.includes("youtube") ||
-      host.includes("ytimg") ||
-      host.includes("twitch") ||
-      host.includes("vimeo") ||
-      host.includes("spotify") ||
-      host.includes("netflix") ||
-      host.includes("sndcdn") ||
-      host.includes("soundcloud") ||
-      host.includes("media") ||
-      host.includes("stream") ||
-      url.pathname.endsWith(".mp4") ||
-      url.pathname.endsWith(".m3u8") ||
-      url.pathname.endsWith(".webm") ||
-      url.pathname.endsWith(".mp3")
-    ) {
-      return "libcurl";
-    }
-  } catch {
-    // Fallback to epoxy if URL parsing fails
-  }
+export function getAutoTransportForUrl(_targetUrl?: string): ProxyTransport {
+  // Epoxy transport uses Rustls and native browser fetch streams,
+  // preventing WASM memory overflows and SSL certificate error 60 during media streaming.
   return "epoxy";
 }
 
@@ -286,62 +253,31 @@ function createTransportAdapter(
         filteredHeaders.push(["Host", targetHost]);
       }
 
+      // Bypass ALL requests via our Node.js backend. WISP is blocked by Cloudflare.
       let lastError: unknown = null;
-      const attemptedWispServers: string[] = [normalizedWisp];
-      let activePreferredTransport: ProxyTransport = preferred;
-
-      // Retry with alternative transports (Libcurl fallback for cert errors) and Wisp relays
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const res = await worker.sendMessage({
-            type: "fetch",
-            fetch: {
-              remote: remote.toString(),
-              method: method || "GET",
-              headers: filteredHeaders,
-              body: body || undefined,
-            },
-          });
-
-          const fetchResult = (res as unknown as BareMuxFetchResult).fetch;
-          const formattedHeaders: RawHeaders = normalizeRawHeaders(fetchResult.headers);
-
-          return {
-            body: fetchResult.body,
-            headers: formattedHeaders,
-            status: fetchResult.status || 200,
-            statusText: fetchResult.statusText || "OK",
-          };
-        } catch (err: unknown) {
-          lastError = err;
-          const errStr = String((err as { message?: string })?.message || err);
-          console.warn(`[ProxyTransport] Fetch attempt ${attempt + 1} failed: ${errStr}`);
-
-          // When Epoxy encounters InvalidCertificate / UnknownIssuer, switch to Libcurl transport
-          if (activePreferredTransport === "epoxy") {
-            activePreferredTransport = "libcurl";
-          } else {
-            activePreferredTransport = "epoxy";
-          }
-
-          const nextCandidate = WISP_SERVERS.find(
-            (s) => !attemptedWispServers.some((a) => a.includes(s.url) || s.url.includes(a)),
-          );
-
-          if (attempt < 2) {
-            const nextWisp = nextCandidate ? nextCandidate.url : normalizedWisp;
-            if (nextCandidate) {
-              attemptedWispServers.push(nextCandidate.url);
-            }
-            try {
-              await ensureTransport(nextWisp, activePreferredTransport);
-            } catch {
-              // ignore
-            }
-          } else {
-            break;
-          }
+      try {
+        const fetchOpts: RequestInit = {
+          method: method || "GET",
+          headers: filteredHeaders,
+        };
+        if (method !== "GET" && method !== "HEAD") {
+          fetchOpts.body = body as BodyInit;
         }
+
+        const proxyRes = await fetch("/api/proxy?url=" + encodeURIComponent(remote.toString()), fetchOpts);
+        const outHeaders: RawHeaders = [];
+        proxyRes.headers.forEach((val, key) => outHeaders.push([key, val]));
+        const buf = await proxyRes.arrayBuffer();
+        
+        return {
+          body: buf,
+          headers: outHeaders,
+          status: proxyRes.status,
+          statusText: proxyRes.statusText,
+        };
+      } catch (err: unknown) {
+        lastError = err;
+        console.error("Native proxy fetch failed:", err);
       }
 
       const errStr = String(

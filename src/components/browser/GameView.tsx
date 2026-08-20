@@ -94,7 +94,7 @@ export function GameView({ url, name, author, authorLink, onBack }: Props) {
         </div>
       </div>
 
-      <div className="relative h-full w-full flex-1 bg-black">
+      <div className="relative h-full w-full flex-1 bg-black" data-webview="true">
         {loading && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm">
             <Loader2 className="h-6 w-6 animate-spin text-foreground" />

@@ -184,5 +184,5 @@ export function WebView({ url, wisp, active, onMeta, registerNav }: Props) {
     metaRef.current({ url, icon: faviconFor(url) });
   }, [url, wisp]);
 
-  return <div ref={hostRef} className="h-full w-full" data-active={active} />;
+  return <div ref={hostRef} className="h-full w-full" data-active={active} data-webview="true" />;
 }

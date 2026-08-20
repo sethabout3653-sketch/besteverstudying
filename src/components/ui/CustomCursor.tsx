@@ -29,6 +29,16 @@ export function CustomCursor() {
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
       }
+
+      const target = e.target as HTMLElement;
+      if (target && typeof target.closest === "function") {
+        const isOverWebview = target.closest("iframe, [data-webview='true']");
+        if (isOverWebview) {
+          setIsVisible(false);
+        } else {
+          setIsVisible(true);
+        }
+      }
     };
 
     const handleMouseDown = (e: MouseEvent) => {
@@ -50,6 +60,18 @@ export function CustomCursor() {
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
+
+      // If the cursor enters any website iframe viewport or the webview host container,
+      // we hide our custom pointer so they can use the normal web interaction or browser-rendered pointers.
+      const isOverWebview = target.closest(
+        "iframe, .h-full[data-active='true'], [data-webview='true']",
+      );
+      if (isOverWebview) {
+        setIsVisible(false);
+        return;
+      } else {
+        setIsVisible(true);
+      }
 
       const interactive = target.closest(
         'a, button, input, select, textarea, [role="button"], .cursor-pointer, [data-interactive="true"]',

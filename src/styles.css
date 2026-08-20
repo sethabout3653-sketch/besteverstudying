@@ -160,7 +160,7 @@
 }
 
 @media (pointer: fine) {
-  *, *::before, *::after {
+  *:not(iframe):not([data-webview="true"]):not([data-webview="true"] *) {
     cursor: none !important;
   }
 }
