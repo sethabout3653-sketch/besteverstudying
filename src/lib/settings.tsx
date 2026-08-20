@@ -77,15 +77,15 @@ export function useBrowserChrome() {
 
   useEffect(() => {
     if (!ready) return;
-    document.title = "StudyHub";
+    document.title = "Frosted";
 
-    const href = "/studyhub.svg";
-    let link = document.querySelector<HTMLLinkElement>("link[data-studyhub-icon]");
+    const href = "/favicon.ico";
+    let link = document.querySelector<HTMLLinkElement>("link[data-frosted-icon]");
     if (!link) {
       link = document.createElement("link");
       link.rel = "icon";
-      link.type = "image/svg+xml";
-      link.dataset["studyhubIcon"] = "true";
+      link.type = "image/x-icon";
+      link.dataset["frostedIcon"] = "true";
       document.head.appendChild(link);
     }
     link.href = href;

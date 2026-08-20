@@ -7,16 +7,17 @@ import { SettingsProvider } from "@/lib/settings";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "StudyHub — Educational Workspace & Browser" },
+      { title: "Frosted — Proxy Browser & Games Hub" },
       {
         name: "description",
-        content: "StudyHub is a workspace and web browser with educational tools and lessons.",
+        content:
+          "Frosted is a web browser and games library in one clean blue-and-black workspace.",
       },
-      { property: "og:title", content: "StudyHub — Educational Workspace & Browser" },
+      { property: "og:title", content: "Frosted — Proxy Browser & Games Hub" },
       {
         property: "og:description",
         content:
-          "Browse the web through a fast proxy and access lessons in one clean black-and-white workspace.",
+          "Browse the web through a fast proxy and play games in one clean blue-and-black workspace.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/" },

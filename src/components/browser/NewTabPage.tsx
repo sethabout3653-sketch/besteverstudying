@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function NewTabPage({ engine, onEngineChange, onNavigate, onOpenGames }: Props) {
-  const logoText = "StudyHub";
+  const logoText = "Frosted";
   const [value, setValue] = useState("");
   const [shortcuts, setShortcuts] = useState<Shortcut[]>([]);
   const [adding, setAdding] = useState(false);
