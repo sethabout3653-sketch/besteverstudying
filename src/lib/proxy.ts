@@ -77,9 +77,38 @@ export function getAutoWispForUrl(targetUrl?: string): string {
 /**
  * Automatically determines optimal transport (Libcurl vs Epoxy) for the URL
  */
-export function getAutoTransportForUrl(_targetUrl?: string): ProxyTransport {
-  // Epoxy transport uses Rustls and native browser fetch streams,
-  // preventing WASM memory overflows and SSL certificate error 60 during media streaming.
+export function getAutoTransportForUrl(targetUrl?: string): ProxyTransport {
+  if (!targetUrl) return "epoxy";
+  try {
+    const raw = targetUrl.startsWith("http") ? targetUrl : `https://${targetUrl}`;
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+
+    // YouTube, Twitch, Spotify, SoundCloud, Vimeo and direct video/audio assets require massive bandwidth and streaming stability.
+    // Epoxy's Rust-in-WASM TLS stack panics on large streaming buffers, leading to Chromium's STATUS_BREAKPOINT tab crash.
+    // Libcurl offloads TLS to the Wisp relay, preventing browser heap exhaustion.
+    if (
+      host.includes("googlevideo") ||
+      host.includes("youtube") ||
+      host.includes("ytimg") ||
+      host.includes("twitch") ||
+      host.includes("vimeo") ||
+      host.includes("spotify") ||
+      host.includes("netflix") ||
+      host.includes("sndcdn") ||
+      host.includes("soundcloud") ||
+      host.includes("media") ||
+      host.includes("stream") ||
+      url.pathname.endsWith(".mp4") ||
+      url.pathname.endsWith(".m3u8") ||
+      url.pathname.endsWith(".webm") ||
+      url.pathname.endsWith(".mp3")
+    ) {
+      return "libcurl";
+    }
+  } catch {
+    // Fallback to epoxy if URL parsing fails
+  }
   return "epoxy";
 }
 
