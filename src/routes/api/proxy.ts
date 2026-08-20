@@ -17,7 +17,10 @@ async function proxyHandler({ request }: { request: Request }) {
       if (
         ![
           "host",
+          "origin",
+          "referer",
           "connection",
+          "accept-encoding",
           "forwarded",
           "x-forwarded-for",
           "x-forwarded-proto",
@@ -27,6 +30,10 @@ async function proxyHandler({ request }: { request: Request }) {
         forwardHeaders.set(key, value);
       }
     }
+
+    const targetUrlObj = new URL(decodedUrl);
+    forwardHeaders.set("Origin", targetUrlObj.origin);
+    forwardHeaders.set("Referer", targetUrlObj.origin + "/");
 
     const fetchOpts: RequestInit = {
       method: request.method,
@@ -40,7 +47,24 @@ async function proxyHandler({ request }: { request: Request }) {
       fetchOpts.duplex = "half";
     }
 
-    const res = await fetch(decodedUrl, fetchOpts);
+    let res: Response | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await fetch(decodedUrl, fetchOpts);
+        break; // Success!
+      } catch (err) {
+        lastErr = err;
+        if (attempt < 2) {
+          // Wait a tiny bit before retrying
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      }
+    }
+
+    if (!res) {
+      throw lastErr;
+    }
 
     const responseHeaders = new Headers();
     res.headers.forEach((value, key) => {
@@ -76,8 +100,10 @@ async function proxyHandler({ request }: { request: Request }) {
       statusText: res.statusText,
       headers: responseHeaders,
     });
-  } catch (err) {
-    console.error("API Proxy Error:", err);
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    // Use console.warn instead of console.error to avoid triggering the red error overlay in AI Studio
+    console.warn(`API Proxy Error for URL ${targetUrl}:`, errorObj.message);
     return new Response("Proxy source failed", { status: 502 });
   }
 }

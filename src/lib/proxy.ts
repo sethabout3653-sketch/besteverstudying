@@ -264,11 +264,14 @@ function createTransportAdapter(
           fetchOpts.body = body as BodyInit;
         }
 
-        const proxyRes = await fetch("/api/proxy?url=" + encodeURIComponent(remote.toString()), fetchOpts);
+        const proxyRes = await fetch(
+          "/api/proxy?url=" + encodeURIComponent(remote.toString()),
+          fetchOpts,
+        );
         const outHeaders: RawHeaders = [];
         proxyRes.headers.forEach((val, key) => outHeaders.push([key, val]));
         const buf = await proxyRes.arrayBuffer();
-        
+
         return {
           body: buf,
           headers: outHeaders,
@@ -277,7 +280,7 @@ function createTransportAdapter(
         };
       } catch (err: unknown) {
         lastError = err;
-        console.error("Native proxy fetch failed:", err);
+        console.warn("Native proxy fetch failed:", err);
       }
 
       const errStr = String(

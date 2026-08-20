@@ -51,7 +51,7 @@ export function NewTabPage({ engine, onEngineChange, onNavigate, onOpenGames }: 
     <div className="frosted-grid relative h-full overflow-y-auto bg-background">
       <div className="flex min-h-full flex-col items-center justify-center px-6 py-16">
         <motion.h1
-          className="select-none text-7xl font-light tracking-tight text-foreground md:text-8xl cursor-default flex flex-wrap justify-center"
+          className="select-none text-5xl sm:text-7xl font-light tracking-tight text-foreground md:text-8xl cursor-default flex flex-wrap justify-center"
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
@@ -70,27 +70,27 @@ export function NewTabPage({ engine, onEngineChange, onNavigate, onOpenGames }: 
             </motion.span>
           ))}
         </motion.h1>
-        <div className="mt-4 h-[3px] w-80 md:w-96 bg-gradient-to-r from-transparent via-foreground to-transparent" />
+        <div className="mt-4 h-[3px] w-full max-w-[240px] sm:max-w-[320px] md:max-w-md bg-gradient-to-r from-transparent via-foreground to-transparent" />
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
             if (value.trim()) onNavigate(value);
           }}
-          className="mt-14 flex w-full max-w-3xl items-center gap-3 rounded-2xl border border-border bg-card px-5 py-3"
+          className="mt-10 sm:mt-14 flex w-full max-w-3xl items-center gap-2 sm:gap-3 rounded-2xl border border-border bg-card px-3 sm:px-5 py-2 sm:py-3"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={`Search ${engineName} or type a URL`}
-            className="flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-sm sm:text-base text-foreground outline-none placeholder:text-muted-foreground min-w-0"
           />
           <select
             value={engine}
             onChange={(e) => onEngineChange(e.target.value)}
             aria-label="Search engine"
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none"
+            className="rounded-lg border border-border bg-background px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs text-foreground outline-none shrink-0"
           >
             {SEARCH_ENGINES.map((e) => (
               <option key={e.name} value={e.url}>

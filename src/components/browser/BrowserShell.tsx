@@ -88,10 +88,10 @@ export function BrowserShell() {
     });
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-background text-foreground">
       {/* Tab strip */}
-      <div className="flex items-center gap-1 border-b border-border bg-card px-2 pt-2">
-        <div className="flex flex-1 items-end gap-1 overflow-x-auto relative">
+      <div className="flex items-center gap-1 border-b border-border bg-card px-1.5 sm:px-2 pt-1.5 sm:pt-2">
+        <div className="flex flex-1 items-end gap-1 overflow-x-auto relative scrollbar-none">
           <AnimatePresence initial={false}>
             {tabs.map((tab) => (
               <motion.div
@@ -106,7 +106,7 @@ export function BrowserShell() {
                   setOmnibox(tab.kind === "web" ? tab.url : "");
                 }}
                 style={{ overflow: "hidden" }}
-                className={`group flex min-w-[9rem] max-w-[14rem] cursor-pointer items-center gap-2 rounded-t-lg border border-b-0 px-3 py-2 text-xs select-none ${
+                className={`group flex min-w-[6.5rem] sm:min-w-[9rem] max-w-[14rem] cursor-pointer items-center gap-1.5 sm:gap-2 rounded-t-lg border border-b-0 px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs select-none ${
                   tab.id === activeId
                     ? "border-border bg-background text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent"
@@ -162,7 +162,7 @@ export function BrowserShell() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-2">
+      <div className="flex items-center gap-1 sm:gap-2 border-b border-border bg-card px-2 sm:px-3 py-1.5 sm:py-2">
         <ToolbarButton label="Back" onClick={() => navs.current[activeId]?.back()}>
           <ArrowLeft className="h-4 w-4" />
         </ToolbarButton>
@@ -190,7 +190,7 @@ export function BrowserShell() {
         </ToolbarButton>
 
         <form
-          className="flex-1"
+          className="flex-1 min-w-[80px] sm:min-w-[120px]"
           onSubmit={(e) => {
             e.preventDefault();
             navigate(omnibox);
@@ -203,12 +203,13 @@ export function BrowserShell() {
             autoComplete="off"
             onFocus={(e) => e.currentTarget.select()}
             placeholder="Search or enter address"
-            className="w-full rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground transition-all duration-200 ease-out focus:ring-2 focus:ring-primary/20 focus:border-foreground/40"
+            className="w-full rounded-full border border-border bg-background px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-foreground outline-none placeholder:text-muted-foreground transition-all duration-200 ease-out focus:ring-2 focus:ring-primary/20 focus:border-foreground/40"
           />
         </form>
 
         <ToolbarButton
           label="Lessons"
+          className="hidden sm:inline-flex"
           onClick={() => addTab({ kind: "games", title: "Lessons", url: "frosted://lessons" })}
         >
           <BookOpen className="h-4 w-4" />
@@ -294,10 +295,12 @@ function ToolbarButton({
   label,
   onClick,
   children,
+  className,
 }: {
   label: string;
   onClick: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <motion.button
@@ -305,7 +308,7 @@ function ToolbarButton({
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+      className={`rounded-full p-1.5 sm:p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer shrink-0 ${className || ""}`}
     >
       {children}
     </motion.button>

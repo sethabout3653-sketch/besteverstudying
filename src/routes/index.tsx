@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <SettingsProvider>
-      <ClientOnly fallback={<div className="h-screen w-full bg-background" />}>
+      <ClientOnly fallback={<div className="h-screen h-[100dvh] w-full bg-background" />}>
         <BrowserShell />
       </ClientOnly>
     </SettingsProvider>
